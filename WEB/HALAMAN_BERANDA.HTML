@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PTM 2024 - Universitas Palangka Raya</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{ --primary:#004225; --accent:#0d6efd; --card:#ffffff; --muted:#6c757d; }
+    body { background:#f4f8f6; font-family:"Segoe UI",Arial,sans-serif; color:#222; }
+    .navbar { background:var(--primary); }
+    .navbar .navbar-brand { color:#fff; }
+    .header { background: linear-gradient(rgba(31, 0, 66, 0.75), rgba(0,66,37,0.75)), url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80") no-repeat center center; background-size:cover; color:#fff; text-align:center; padding:60px 0; }
+    .hidden { display:none !important; }
+    .footer { background:var(--primary); color:#fff; text-align:center; padding:20px 0; margin-top:50px; }
+    .table thead { background:var(--primary); color:#fff; }
+    .badge-status { font-weight:600; padding:.35em .6em; border-radius:.4rem; color:#fff; display:inline-block; }
+    .status-hadir { background:#198754; }
+    .status-sakit { background:#0d6efd; }
+    .status-izin { background:#ffc107; color:#000; }
+    .status-alfa { background:#dc3545; }
+    .role-label { font-weight:600; font-size:.95rem; }
+
+    /* Elegant auth card */
+    .auth-wrapper { display:flex; align-items:center; justify-content:center; padding:30px 0; }
+    .auth-card {
+      width:100%;
+      max-width:420px;
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 6px 24px rgba(15,23,42,0.08);
+      padding:26px;
+      border:1px solid rgba(0,0,0,0.04);
+    }
+    .auth-brand {
+      display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:16px;
+    }
+    .auth-brand img{ width:56px; height:56px; object-fit:contain; border-radius:8px; }
+    .auth-title { font-weight:700; letter-spacing:0.2px; margin:0; }
+    .auth-sub { color:var(--muted); margin:0; font-size:0.9rem; }
+
+    /* floating inputs look */
+    .form-floating > .form-control { height: calc(3rem + 2px); padding:1rem .75rem; }
+    .auth-actions { margin-top:16px; display:flex; gap:10px; }
+    .btn-primary {
+      background: linear-gradient(90deg,var(--primary), #006a3a);
+      border: none;
+    }
+    .small-muted { color:var(--muted); font-size:.9rem; }
+
+    /* responsive tweaks */
+    @media (max-width:420px){
+      .auth-card{ padding:18px; border-radius:10px; }
+      .header{ padding:34px 0; }
+    }
+    /* statistik controls */
+    .stat-controls { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    .search-box { max-width:320px; }
+
+    /* table full width tweaks */
+    .table-container { width:100%; overflow-x:auto; }
+    .table { width:100% !important; table-layout:auto; }
+    .table th, .table td { vertical-align:middle; text-align:center; white-space:nowrap; }
+    .table th:nth-child(1), .table th:nth-child(2), .table td:nth-child(1), .table td:nth-child(2) {
+      text-align:left; white-space:normal;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+  <div class="container">
+    <a class="navbar-brand fw-bold">PTM Universitas Palangka Raya</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link" onclick="showAbsensi()">Absensi</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showJadwal()">Jadwal Mata Kuliah</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showInfo()">Informasi Kampus</a></li>
+
+        <!-- Login -->
+        <li class="nav-item"><a class="nav-link" id="loginAdminLink" onclick="showLoginAdmin()">Login Admin</a></li>
+        <li class="nav-item"><a class="nav-link" id="loginStudentLink" onclick="showLoginStudent()">Login Mahasiswa</a></li>
+
+        <!-- Admin only -->
+        <li class="nav-item"><a class="nav-link hidden" id="dashboardLink" onclick="showDashboard()">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link hidden" id="riwayatAdminLink" onclick="showRiwayatAdmin()">Riwayat Absensi</a></li>
+
+        <li class="nav-item"><a class="nav-link" id="riwayatSayaLink" onclick="showRiwayatSaya()">Riwayat Saya</a></li>
+        <li class="nav-item"><a class="nav-link hidden" id="logoutLink" onclick="logout()">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="header">
+  <img src="logo_2.png" alt="Logo UPR" class="logo-header">
+  <h1>Program Studi Pendidikan Teknik Mesin</h1>
+  <p>Universitas Palangka Raya Angkatan 2024</p>
+  <style> /* === Header logo resize === */
+.header {
+  background: linear-gradient(rgba(31, 0, 66, 0.75), rgba(0,66,37,0.75)),
+              url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80")
+              no-repeat center center;
+  background-size: cover;
+  color: #fff;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.header .logo-header {
+  width: 130px;
+  height: auto;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.header .logo-header:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 600px) {
+  .header .logo-header {
+    width: 110px;
+  }
+}
+</style>
+</header>
+
+<!-- ====================== INFO ====================== -->
+<section id="info" class="container mt-5 hidden">
+<h2 class="text-center mb-4 text-primary fw-bold">Informasi Prodi</h2>
+<div class="card shadow-sm p-4 mb-4">
+<p>PROGRAM STUDI PENDIDIKAN TEKNIK MESIN JURUSAN PENDIDIKAN TEKNOLOGI DAN KEJURUAN FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN UNIVERSITAS PALANGKA RAYA</p>
+</div>
+
+
+<div class="visi-card">
+<h3>Visi</h3>
+<p>Universitas Palangka Raya menjadi perguruan tinggi terbaik dalam menghasilkan sumber daya manusia (SDM) yang berkualitas, bermoral Pancasila, dan berdaya saing tinggiMenjadi Program Studi yang dapat menghasilkan sumber daya manusia bermoral Pancasila, bermutu, berkarakter, berdaya saing tinggi dengan penekanan menghasilkan guru profesional di bidang pendidikan teknik mesin.</p>
+
+
+<h3 class="mt-4">Misi</h3>
+<ol>
+<li>Menyelenggarakan dan mengembangkan pendidikan dan pengajaran secara efektif untuk menghasilkan tenaga kependidikan di bidang Pendidikan Teknik Mesin yang bermoral Pancasila, bermutu, berkarakter dan berdaya saing tinggi.</li>
+<li>Melaksanakan penelitian untuk mendukung terciptanya kegiatan yang inovatif dalam pengembangan ilmu dan pembelajaran di bidang Pendidikan Teknik Mesin.</li>
+<li>Melaksanakan kegiatan pengabdian kepada masyarakat di bidang Pendidikan Teknik Mesin yang memberikan pencerahan dan manfaat bagi pembangunan masyarakat.</li>
+<li>Mengembangkan ilmu pengetahuan dan teknologi untuk menunjang pengembangan pendidikan di bidang Pendidikan Teknik Mesin.</li>
+<li>Menyelenggarakan pengelolaan Program Studi berdasarkan paradigma baru manajemen pendidikan tinggi yang berazas otonom, evaluatif, dan akuntabel, yang bermuara pada peningkatan pelayanan prima.</li>
+</ol>
+</div>
+
+
+<!-- ================= GALERI PRODI (DITAMBAHKAN DI SINI) ================= -->
+<div class="galeri-prodi mt-4">
+<h3 class="text-center mb-3">Galeri Kegiatan Prodi</h3>
+<div class="row g-3">
+<div class="col-md-4"><img src="Lab_ptm.jpg" class="img-fluid rounded shadow-sm" alt="Foto 1"></div>
+<div class="col-md-4"><img src="ruang_dosen.jpg" class="img-fluid rounded shadow-sm" alt="Foto 2"></div>
+<div class="col-md-4"><img src="Lbakti_1.jpg" class="img-fluid rounded shadow-sm" alt="Foto 3"></div>
+</div>
+</div>
+<!-- ===================================================================== -->
+
+
+<div class="alamat-card mt-4">
+<h5>Alamat Kampus</h5>
+<p>Jln. Yos Sudarso, Palangka Raya, Kalimantan Tengah, 73111</p>
+<h5>Alamat Prodi</h5>
+<p>Jl. Hendrik timang</p>
+</div>
+</section>
+
+<!-- ====================== ABSENSI ====================== -->
+<section id="absensi" class="container mt-5">
+  <h2 class="text-center text-success mb-4">Absensi Mahasiswa PTM 2024</h2>
+
+  <div class="card shadow-sm p-4 mx-auto" style="max-width:760px;">
+    <div class="d-flex justify-content-between mb-2">
+      <div id="loggedAs" class="text-end role-label">Belum login</div>
+    </div>
+
+    <form id="attendanceForm">
+  <div class="row gx-2">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">NIM</label>
+      <input type="text" id="attNIM" class="form-control" required />
+    </div>
+    <div class="col-md-8 mb-3">
+      <label class="form-label">Nama</label>
+      <input type="text" id="attName" class="form-control" required />
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Mata Kuliah</label>
+    <select id="attSubject" class="form-control" required></select>
+  </div>
+
+  <div class="row gx-2">
+    <div class="col-md-8 mb-3">
+      <label class="form-label">Status</label>
+      <select id="attStatus" class="form-control" required>
+        <option value="Hadir">Hadir</option>
+        <option value="Sakit">Sakit</option>
+        <option value="Izin">Izin</option>
+        <option value="Alfa">Alfa</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-3 d-flex align-items-end">
+      <button class="btn btn-success w-100" id="submitAttendanceBtn">Simpan Absensi</button>
+    </div>
+  </div>
+  <div class="text-muted small">Catatan: Tanggal absensi akan dicatat otomatis saat disimpan.</div>
+</form>
+  </div>
+</section>
+
+<!-- ====================== JADWAL ====================== -->
+<section id="jadwal" class="container mt-5 hidden">
+  <h2 class="text-center text-primary mb-4">Jadwal Mata Kuliah</h2>
+  <table class="table table-bordered shadow-sm" id="jadwalTable">
+    <thead>
+      <tr><th>Tanggal</th><th>Mata Kuliah</th><th>Dosen</th><th>Ruang</th><th>Waktu</th></tr>
+    </thead>
+    <tbody id="jadwalBody"></tbody>
+  </table>
+</section>
+
+<!-- ====================== INFO ====================== -->
+<section id="info" class="container mt-5 hidden">
+<h2 class="text-center mb-4 text-primary fw-bold">Informasi Prodi</h2>
+<div class="card shadow-sm p-4 mb-4">
+<p>PROGRAM STUDI PENDIDIKAN TEKNIK MESIN JURUSAN PENDIDIKAN TEKNOLOGI DAN KEJURUAN FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN UNIVERSITAS PALANGKA RAYA</p>
+</div>
+
+
+<div class="visi-card">
+<h3>Visi</h3>
+<p>Universitas Palangka Raya menjadi perguruan tinggi terbaik dalam menghasilkan sumber daya manusia (SDM) yang berkualitas, bermoral Pancasila, dan berdaya saing tinggiMenjadi Program Studi yang dapat menghasilkan sumber daya manusia bermoral Pancasila, bermutu, berkarakter, berdaya saing tinggi dengan penekanan menghasilkan guru profesional di bidang pendidikan teknik mesin.</p>
+
+
+<h3 class="mt-4">Misi</h3>
+<ol>
+<li>Menyelenggarakan dan mengembangkan pendidikan dan pengajaran secara efektif untuk menghasilkan tenaga kependidikan di bidang Pendidikan Teknik Mesin yang bermoral Pancasila, bermutu, berkarakter dan berdaya saing tinggi.</li>
+<li>Melaksanakan penelitian untuk mendukung terciptanya kegiatan yang inovatif dalam pengembangan ilmu dan pembelajaran di bidang Pendidikan Teknik Mesin.</li>
+<li>Melaksanakan kegiatan pengabdian kepada masyarakat di bidang Pendidikan Teknik Mesin yang memberikan pencerahan dan manfaat bagi pembangunan masyarakat.</li>
+<li>Mengembangkan ilmu pengetahuan dan teknologi untuk menunjang pengembangan pendidikan di bidang Pendidikan Teknik Mesin.</li>
+<li>Menyelenggarakan pengelolaan Program Studi berdasarkan paradigma baru manajemen pendidikan tinggi yang berazas otonom, evaluatif, dan akuntabel, yang bermuara pada peningkatan pelayanan prima.</li>
+</ol>
+</div>
+
+
+<!-- ================= GALERI PRODI (DITAMBAHKAN DI SINI) ================= -->
+<div class="galeri-prodi mt-4">
+<h3 class="text-center mb-3">Galeri Kegiatan Prodi</h3>
+<div class="row g-3">
+<div class="col-md-4"><img src="Lab_ptm.jpg" class="img-fluid rounded shadow-sm" alt="Foto 1"></div>
+<div class="col-md-4"><img src="ruang_dosen.jpg" class="img-fluid rounded shadow-sm" alt="Foto 2"></div>
+<div class="col-md-4"><img src="foto3.jpg" class="img-fluid rounded shadow-sm" alt="Foto 3"></div>
+</div>
+</div>
+<!-- ===================================================================== -->
+
+
+<div class="alamat-card mt-4">
+<h5>Alamat Kampus</h5>
+<p>Jln. Yos Sudarso, Palangka Raya, Kalimantan Tengah, 73111</p>
+<h5>Alamat Prodi</h5>
+<p>Jl. Hendrik timang</p>
+</div>
+</section>
+
+
+<!-- ====================== LOGIN ADMIN (ELEGANT) ====================== -->
+<section id="loginAdmin" class="container mt-5 hidden auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="logo_2.png" alt="logo"> <img src="logo_3.jpeg" alt="">
+    </div>
+    <div class="text-center mb-3">
+      <h4 class="auth-title">Masuk sebagai Admin</h4>
+      <p class="auth-sub">Akses dashboard & kelola data absensi</p>
+    </div>
+
+    <form id="loginAdminForm">
+      <div class="form-floating mb-3">
+        <input type="text" id="adminUsername" class="form-control" placeholder="Username" required>
+        <label for="adminUsername">Username</label>
+      </div>
+      <div class="form-floating mb-3">
+        <input type="password" id="adminPassword" class="form-control" placeholder="Password" required>
+        <label for="adminPassword">Password</label>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="small-muted">Pastikan kredensial Anda aman.</small>
+        <button class="btn btn-primary">Masuk</button>
+      </div>
+
+      <p class="mt-3 text-center text-danger" id="loginAdminError" style="display:none;">Username atau password salah!</p>
+    </form>
+  </div>
+</section>
+
+<!-- ====================== LOGIN MAHASISWA (ELEGANT) ====================== -->
+<section id="loginStudent" class="container mt-5 hidden auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="logo_2.png" alt="logo"> <img src="logo_3.jpeg" alt="">
+    </div>
+    <div class="text-center mb-3">
+      <h4 class="auth-title">Masuk sebagai Mahasiswa PTM</h4>
+      <p class="auth-sub">Gunakan NIM dan kata sandi Anda</p>
+    </div>
+
+    <form id="loginStudentForm">
+      <div class="form-floating mb-3">
+        <input type="text" id="studentNIMInput" class="form-control" placeholder="NIM" required />
+        <label for="studentNIMInput">NIM</label>
+      </div>
+      <div class="form-floating mb-3">
+        <input type="password" id="studentPassInput" class="form-control" placeholder="Password" required />
+        <label for="studentPassInput">Password</label>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <a href="#" class="small-muted" onclick="alert('Minta admin untuk reset password')">Lupa password?</a>
+        <button class="btn btn-primary">Masuk</button>
+      </div>
+
+      <p class="mt-3 text-center text-danger" id="loginStudentError" style="display:none;">NIM atau password salah!</p>
+
+      <!-- NOTE: daftar mahasiswa terdaftar sengaja DIHAPUS demi privasi -->
+    </form>
+  </div>
+</section>
+
+<!-- ====================== DASHBOARD ADMIN (AWAL) ====================== -->
+<section id="dashboard" class="container mt-5 hidden">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Dashboard Admin</h3>
+    <div>
+      <button class="btn btn-secondary me-2" id="btnRefresh">Refresh</button>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card p-3 mb-4 shadow-sm">
+        <h5>Kelola Jadwal Mata Kuliah</h5>
+        <form id="jadwalForm" class="row g-2">
+          <div class="col-md-4"><input type="date" id="tanggal" class="form-control" required></div>
+          <div class="col-md-4"><input type="text" id="subject" class="form-control" placeholder="Mata Kuliah" required></div>
+          <div class="col-md-4"><input type="text" id="lecturer" class="form-control" placeholder="Dosen" required></div>
+          <div class="col-md-3 mt-2"><input type="text" id="room" class="form-control" placeholder="Ruang" required></div>
+          <div class="col-md-3 mt-2"><input type="text" id="time" class="form-control" placeholder="Waktu" required></div>
+          <div class="col-md-6 mt-2"><button class="btn btn-success w-100">Tambah Jadwal</button></div>
+        </form>
+      </div>
+
+      <!-- ====================== STATISTIK (TERPISAH) ====================== -->
+
+      <div class="card p-3 shadow-sm mb-3">
+        <h5>Statistik Kehadiran</h5>
+        <div id="statKehadiran">Memuat...</div>
+      </div>
+
+      <div class="card p-3 shadow-sm">
+        <h5>Statistik Per Mata Kuliah</h5>
+
+        <!-- Kontrol pencarian & sortir -->
+        <div class="stat-controls">
+          <input type="text" id="statSearchInput" class="form-control search-box" placeholder="Cari nama, NIM, atau mata kuliah...">
+          <button class="btn btn-sm btn-outline-secondary" id="statSortBtn">Urutkan A-Z</button>
+        </div>
+
+        <div id="statMatkul">Memuat...</div>
+      </div>
+
+    </div>
+
+    <!-- right column -->
+    <div class="col-md-6">
+      <div class="card p-3 shadow-sm mb-3">
+        <h5>Tambah Absensi (Admin)</h5>
+        <p class="small text-muted">Admin dapat menambah record absensi jika diperlukan.</p>
+      </div>
+
+      <div class="card p-3 shadow-sm">
+        <h5>Edit Jadwal (Admin)</h5>
+        <table class="table table-sm" id="adminJadwalTable">
+          <thead>
+            <tr><th>Tanggal</th><th>Mata Kuliah</th><th>Dosen</th><th>Ruang</th><th>Waktu</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="adminJadwalBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== RIWAYAT ABSENSI ADMIN ====================== -->
+  <div class="card mt-4 p-3 shadow-sm">
+    <h5>Riwayat Absensi (Edit cepat status)</h5>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>NIM</th><th>Nama</th><th>Matakuliah</th><th>Tanggal</th>
+          <th>Status</th><th>Jam</th><th>Edit Status</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="adminRiwayatBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ====================== RIWAYAT SAYA ====================== -->
+<section id="riwayatSaya" class="container mt-5 hidden">
+  <h3 class="text-center mb-4">Riwayat Absensi Saya</h3>
+
+  <div class="card p-3 mb-3 shadow-sm" style="max-width:640px; margin:auto;">
+    <div class="d-flex gap-2">
+      <input type="text" id="lookupNIM" class="form-control" placeholder="Masukkan NIM (atau kosongkan untuk NIM login)">
+      <button class="btn btn-primary" onclick="cariRiwayatSaya()">Tampilkan</button>
+    </div>
+    <div class="text-muted small mt-2">Mahasiswa tidak dapat mengubah status absensi.</div>
+  </div>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr><th>NIM</th><th>Nama</th><th>Matakuliah</th><th>Tanggal</th><th>Status</th><th>Jam</th></tr>
+    </thead>
+    <tbody id="riwayatSayaBody"></tbody>
+  </table>
+</section>
+
+<footer class="footer">
+  <img src="alas_1.jpeg" alt="logo"> <img src="logo_3.jpeg" alt="">
+  <p>&copy; 2025 Universitas Palangka Raya | Sistem PTM 2024</p>
+</footer>
+
+<script>
+/* =================== Initial data =================== */
+/* Mahasiswa demo (disimpan di localStorage, tidak ditampilkan publik) */
+const initialStudents = [
+  { nim: "2430302100018", password: "220106", name: "muhammad ikhsan" },
+  { nim: "2430202100006", password: "220106", name: "edward ginting" },
+  { nim: "2430202100007", password: "220106", name: "adrian pernandes" },
+  { nim: "2430202100013", password: "220106", name: "daniel dave marly" },
+  { nim: "2430302100006", password: "220106", name: "nugraha paska" },
+  { nim: "2430302100001", password: "220106", name: "ade putra" },
+  { nim: "2430302100003", password: "220106", name: "ilham febrianur" },
+  { nim: "2430202100005", password: "220106", name: "elgi riezwan hermanto" },
+  { nim: "2430102100001", password: "220106", name: "agus siahaan" },
+  { nim: "2430102100006", password: "220106", name: "anwar walinsan" },
+  { nim: "2430102100002", password: "220106", name: "muhammad bayu permana" },
+  { nim: "2430202100008", password: "220106", name: "fais afazin" },
+  { nim: "2430202100011", password: "220106", name: "yosse adi pratama" },
+  { nim: "2430302100023", password: "220106", name: "harits bintang akbar" },
+  { nim: "2430202100012", password: "220106", name: "tommy leo agustin" },
+  { nim: "2430202100003", password: "220106", name: "aryaguna a.h.s. putra" },
+  { nim: "2430202100010", password: "220106", name: "jefri aprianto" },
+  { nim: "2430202100009", password: "220106", name: "ahmad reynaldi" },
+  { nim: "2430302100005", password: "220106", name: "saiful anwar" },
+  { nim: "2430302100021", password: "220106", name: "semli marcelo simbong" },
+  { nim: "2430302100011", password: "220106", name: "ahmad ramadani" },
+  { nim: "2430202100004", password: "220106", name: "reincha zefanya" },
+  { nim: "2430202100014", password: "220106", name: "muhammad zaky" },
+  { nim: "2430302100019", password: "220106", name: "indra" },
+  { nim: "2430302100017", password: "220106", name: "risky junior" },
+  { nim: "2430202100015", password: "220106", name: "wahyu hartoma" },
+  { nim: "2430202100002", password: "220106", name: "wendi dwiseptianto" },
+  { nim: "2430302100012", password: "220106", name: "yohanes" },
+  { nim: "2430102100007", password: "220106", name: "giofernando" },
+  { nim: "2430302100009", password: "220106", name: "yongki stevanus" },
+  { nim: "2430302100004", password: "220106", name: "suharjimi" },
+  { nim: "2430302100007", password: "220106", name: "romi kahendra" },
+  { nim: "2430302100022", password: "220106", name: "herli" },
+  { nim: "2430302100024", password: "220106", name: "frederick yudistira" },
+  { nim: "2430302100008", password: "220106", name: "andika" },
+  { nim: "2430202100016", password: "220106", name: "jonathan sinaga" },
+  { nim: "2430102100004", password: "220106", name: "egi saputra" },
+  { nim: "2430302100010", password: "220106", name: "aswinto primana" },
+  { nim: "2430302100014", password: "220106", name: "edo makhatrin yosua" }
+];
+const adminAccount = { username: "ikhsan", password: "12345" };
+
+/* store students registry if missing (keperluan demo) */
+if (!localStorage.removeItem("studentsRegistry")) {
+  localStorage.setItem("studentsRegistry", JSON.stringify(initialStudents));
+}
+let students = JSON.parse(localStorage.getItem("studentsRegistry"));
+
+let jadwals = JSON.parse(localStorage.getItem("jadwals")) || [
+  { tanggal: "2025-11-12", subject: "Administrasi Sekolah", lecturer: "Dr. Suryanto", room: "B201", time: "07.30-09.30" },
+  { tanggal: "2025-11-13", subject: "Praktik Bengkel", lecturer: "Ir. Dimas Pratama", room: "Lab Mesin", time: "09.40-11.40" }
+];
+let attendances = JSON.parse(localStorage.getItem("attendances")) || [];
+
+const $ = id => document.getElementById(id);
+function saveAll(){ localStorage.setItem("jadwals", JSON.stringify(jadwals)); localStorage.setItem("attendances", JSON.stringify(attendances)); }
+
+/* pages */
+const pages = ["absensi","jadwal","info","loginAdmin","loginStudent","dashboard","riwayatSaya"];
+
+/* ========== Navigation & UI state ========== */
+function hideAll(){ pages.forEach(p=>{ const el=$(p); if(el) el.classList.add("hidden"); }); }
+function showAbsensi(){ hideAll(); $("absensi").classList.remove("hidden"); populateSubjects(); updateLoggedInfo(); lockNIMIfStudent(); }
+function showJadwal(){ hideAll(); $("jadwal").classList.remove("hidden"); renderJadwal(); }
+function showInfo(){ hideAll(); $("info").classList.remove("hidden"); }
+function showLoginAdmin(){ hideAll(); $("loginAdmin").classList.remove("hidden"); }
+function showLoginStudent(){ hideAll(); $("loginStudent").classList.remove("hidden"); }
+function showDashboard(){ hideAll(); $("dashboard").classList.remove("hidden"); renderAdminViews(); }
+function showRiwayatAdmin(){ hideAll(); $("dashboard").classList.remove("hidden"); renderAdminViews(); /* admin view includes riwayat in dashboard */ }
+function showRiwayatSaya(){ hideAll(); $("riwayatSaya").classList.remove("hidden"); prefillRiwayatSaya(); }
+
+function setUIForRole(){
+  const isAdmin = localStorage.getItem("adminLoggedIn")==="true";
+  const studentNIM = localStorage.getItem("studentLoggedInNIM") || null;
+
+  $("loginAdminLink").classList.toggle("hidden", isAdmin || studentNIM);
+  $("loginStudentLink").classList.toggle("hidden", isAdmin || studentNIM);
+  $("dashboardLink").classList.toggle("hidden", !isAdmin);
+  $("riwayatAdminLink").classList.toggle("hidden", !isAdmin);
+  $("riwayatSayaLink").classList.remove("hidden");
+  $("logoutLink").classList.toggle("hidden", !(isAdmin || studentNIM));
+  updateLoggedInfo();
+}
+
+function updateLoggedInfo(){
+  const isAdmin = localStorage.getItem("adminLoggedIn")==="true";
+  const studentNIM = localStorage.getItem("studentLoggedInNIM");
+  if (isAdmin) {
+    $("loggedAs").innerHTML = `<span class="role-label">Admin: <strong>${adminAccount.username}</strong></span>`;
+  } else if (studentNIM) {
+    const s = students.find(x=>x.nim===studentNIM);
+    $("loggedAs").innerHTML = `<span class="role-label">Mahasiswa: <strong>${s? s.name : studentNIM}</strong> (${studentNIM})</span>`;
+  } else {
+    $("loggedAs").innerHTML = `<span class="role-label">Belum login</span>`;
+  }
+}
+
+/* logout */
+function logout(){
+  localStorage.removeItem("adminLoggedIn");
+  localStorage.removeItem("studentLoggedInNIM");
+  alert("Anda telah logout.");
+  setUIForRole();
+  showAbsensi();
+}
+
+/* on load */
+window.onload = () => {
+  students = JSON.parse(localStorage.getItem("studentsRegistry")) || initialStudents;
+  jadwals = JSON.parse(localStorage.getItem("jadwals")) || jadwals;
+  attendances = JSON.parse(localStorage.getItem("attendances")) || attendances;
+  setUIForRole();
+  // direct to appropriate view
+  if (localStorage.getItem("adminLoggedIn")==="true") showDashboard();
+  else if (localStorage.getItem("studentLoggedInNIM")) showAbsensi();
+  else showAbsensi();
+  renderJadwal();
+  renderAdminViews();
+
+  // attach statistik controls listeners (safe to attach here because elements exist)
+  const searchEl = $("statSearchInput");
+  const sortEl = $("statSortBtn");
+  if (searchEl) searchEl.addEventListener("input", e => renderStats(e.target.value.trim().toLowerCase()));
+  if (sortEl) sortEl.addEventListener("click", () => {
+    sortAsc = !sortAsc;
+    sortEl.textContent = sortAsc ? "Urutkan A-Z" : "Urutkan Z-A";
+    renderStats($("statSearchInput").value.trim().toLowerCase());
+  });
+};
+
+/* ========== Login handlers ========== */
+/* Admin login */
+$("loginAdminForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const u = $("adminUsername").value.trim();
+  const p = $("adminPassword").value;
+  if (u === adminAccount.username && p === adminAccount.password) {
+    localStorage.setItem("adminLoggedIn","true");
+    localStorage.removeItem("studentLoggedInNIM");
+    $("loginAdminError").style.display = "none";
+    setUIForRole();
+    showDashboard();
+  } else {
+    $("loginAdminError").style.display = "block";
+  }
+});
+
+/* Student login */
+$("loginStudentForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const nim = $("studentNIMInput").value.trim();
+  const pwd = $("studentPassInput").value;
+  const s = students.find(x=>x.nim===nim && x.password===pwd);
+  if (s) {
+    localStorage.setItem("studentLoggedInNIM", s.nim);
+    localStorage.removeItem("adminLoggedIn");
+    $("loginStudentError").style.display = "none";
+    setUIForRole();
+    showAbsensi();
+  } else {
+    $("loginStudentError").style.display = "block";
+  }
+});
+
+/* ========== Absensi ========== */
+function populateSubjects(){
+  const sel = $("attSubject");
+  sel.innerHTML = "<option value=''>-- Pilih Mata Kuliah --</option>";
+  jadwals.forEach(j=> sel.insertAdjacentHTML("beforeend", `<option value="${j.subject}">${j.subject} — ${j.lecturer}</option>`));
+}
+
+function lockNIMIfStudent(){
+  const studentNIM = localStorage.getItem("studentLoggedInNIM");
+  const isAdmin = localStorage.getItem("adminLoggedIn")==="true";
+  if (studentNIM && !isAdmin) {
+    const s = students.find(x=>x.nim===studentNIM);
+    $("attNIM").value = studentNIM;
+    $("attNIM").setAttribute("readonly","readonly");
+    $("attName").value = s? s.name : "";
+    $("attName").setAttribute("readonly","readonly");
+    $("submitAttendanceBtn").textContent = "Kirim Absensi";
+  } else {
+    $("attNIM").removeAttribute("readonly");
+    $("attNIM").value = "";
+    $("attName").removeAttribute("readonly");
+    $("attName").value = "";
+    $("submitAttendanceBtn").textContent = "Simpan Absensi";
+  }
+}
+
+/* Submit attendance (student or admin) */
+$("attendanceForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const nim = $("attNIM").value.trim();
+  const name = $("attName").value.trim();
+  const subject = $("attSubject").value;
+  const date = new Date().toISOString().split("T")[0]; // tanggal otomatis hari ini
+  const status = $("attStatus").value;
+  const time = new Date().toLocaleTimeString();
+  const isAdmin = localStorage.getItem("adminLoggedIn")==="true";
+  const studentNIM = localStorage.getItem("studentLoggedInNIM");
+
+  if (!isAdmin) {
+    if (!studentNIM) { alert("Login mahasiswa terlebih dahulu untuk melakukan absensi."); showLoginStudent(); return; }
+    if (studentNIM !== nim) { alert("NIM harus sesuai dengan akun mahasiswa yang login."); return; }
+    if (!students.find(s=>s.nim===nim)) { alert("NIM tidak terdaftar."); return; }
+  }
+
+  attendances.push({ nim, name, subject, date, status, time });
+  saveAll();
+  alert("Absensi tersimpan pada tanggal " + date);
+  renderAdminViews();
+  renderRiwayatSaya();
+  if (isAdmin) this.reset(); else lockNIMIfStudent();
+});
+
+/* ========== Jadwal management ========== */
+function renderJadwal(){
+  $("jadwalBody").innerHTML = jadwals.map(j=>`
+    <tr><td>${j.tanggal}</td><td>${j.subject}</td><td>${j.lecturer}</td><td>${j.room}</td><td>${j.time}</td></tr>`).join("");
+}
+
+$("jadwalForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const j = { tanggal:$("tanggal").value, subject:$("subject").value, lecturer:$("lecturer").value, room:$("room").value, time:$("time").value };
+  jadwals.push(j); saveAll(); renderJadwal(); renderAdminViews(); this.reset();
+});
+
+/* Admin side - render admin views (jadwal & riwayat editable) */
+function renderAdminViews(){
+  // admin jadwal list
+  $("adminJadwalBody").innerHTML = jadwals.map((j,i)=>`
+    <tr>
+      <td>${j.tanggal}</td><td>${j.subject}</td><td>${j.lecturer}</td><td>${j.room}</td><td>${j.time}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="editJadwal(${i})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteJadwal(${i})">Hapus</button>
+      </td>
+    </tr>`).join("");
+
+  // admin riwayat with inline status buttons
+  $("adminRiwayatBody").innerHTML = attendances.map((a,i)=>`
+    <tr>
+      <td>${a.nim}</td><td>${a.name}</td><td>${a.subject}</td><td>${a.date}</td>
+      <td>${formatStatusBadge(a.status)}</td><td>${a.time}</td>
+      <td>
+        <div class="btn-group" role="group" aria-label="status-buttons">
+          <button class="btn btn-sm btn-success" onclick="setStatus(${i},'Hadir')">Hadir</button>
+          <button class="btn btn-sm btn-primary" onclick="setStatus(${i},'Sakit')">Sakit</button>
+          <button class="btn btn-sm btn-warning" onclick="setStatus(${i},'Izin')">Izin</button>
+          <button class="btn btn-sm btn-danger" onclick="setStatus(${i},'Alfa')">Alfa</button>
+        </div>
+      </td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteAttendance(${i})">Hapus</button></td>
+    </tr>`).join("");
+
+  renderStats();
+}
+
+/* admin actions for jadwal */
+function editJadwal(i){
+  const j = jadwals[i];
+  $("tanggal").value = j.tanggal; $("subject").value = j.subject; $("lecturer").value = j.lecturer; $("room").value = j.room; $("time").value = j.time;
+  jadwals.splice(i,1); saveAll(); renderAdminViews(); alert("Ubah data lalu klik 'Tambah Jadwal' untuk menyimpan perubahan.");
+}
+function deleteJadwal(i){
+  if(confirm("Hapus jadwal ini?")) { jadwals.splice(i,1); saveAll(); renderAdminViews(); renderJadwal(); }
+}
+
+/* admin set status quickly */
+function setStatus(index, status){
+  if (localStorage.getItem("adminLoggedIn")!=="true") { alert("Hanya admin yang dapat mengubah status."); return; }
+  if (!attendances[index]) return;
+  attendances[index].status = status;
+  saveAll();
+  renderAdminViews();
+  renderRiwayatSaya();
+}
+
+/* delete attendance */
+function deleteAttendance(i){
+  if (localStorage.getItem("adminLoggedIn")!=="true") { alert("Hanya admin yang dapat menghapus data."); return; }
+  if (confirm("Hapus record absensi ini?")) { attendances.splice(i,1); saveAll(); renderAdminViews(); renderRiwayatSaya(); }
+}
+
+/* ========== Riwayat Saya (Mahasiswa) ========= */
+function prefillRiwayatSaya(){
+  const logged = localStorage.getItem("studentLoggedInNIM");
+  $("lookupNIM").value = logged || "";
+  cariRiwayatSaya();
+}
+
+function cariRiwayatSaya(){
+  const query = $("lookupNIM").value.trim();
+  const studentNIM = query || localStorage.getItem("studentLoggedInNIM");
+  const tbody = $("riwayatSayaBody");
+  if (!studentNIM) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Masukkan NIM atau login sebagai mahasiswa terlebih dahulu.</td></tr>`;
+    return;
+  }
+  const data = attendances.filter(a=>a.nim === studentNIM);
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Tidak ada riwayat absensi.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(a=>`
+    <tr>
+      <td>${a.nim}</td><td>${a.name}</td><td>${a.subject}</td><td>${a.date}</td><td>${formatStatusBadge(a.status)}</td><td>${a.time}</td>
+    </tr>`).join("");
+}
+
+/* helper for status badge */
+function formatStatusBadge(status){
+  const cls = status==="Hadir" ? "status-hadir" : status==="Sakit" ? "status-sakit" : status==="Izin" ? "status-izin" : "status-alfa";
+  return `<span class="badge-status ${cls}">${status}</span>`;
+}
+
+/* ========================== STATISTIK (PER MAHASISWA) ========================== */
+
+// sorting state
+let sortAsc = true;
+
+function renderStats(filterText = "") {
+  attendances = JSON.parse(localStorage.getItem("attendances")) || attendances;
+
+  const start = $("startDate")?.value ? new Date($("startDate").value) : null;
+  const end = $("endDate")?.value ? new Date($("endDate").value) : null;
+
+  let filtered = attendances.filter(a=>{
+    const d = new Date(a.date);
+    if (start && d < start) return false;
+    if (end && d > end) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    $("statMatkul").innerHTML = `<p class="text-muted">Tidak ada data sesuai filter.</p>`;
+
+  }
+
+  // === Group by Subject ===
+  const bySubject = {};
+
+  filtered.forEach(a=>{
+    const ft = filterText.toLowerCase();
+    const match = !filterText ||
+      a.name.toLowerCase().includes(ft) ||
+      a.nim.includes(ft) ||
+      a.subject.toLowerCase().includes(ft);
+
+    if (!match) return;
+
+    if (!bySubject[a.subject]) bySubject[a.subject] = {};
+    if (!bySubject[a.subject][a.nim]) {
+      bySubject[a.subject][a.nim] = { 
+        name:a.name, hadir:0, sakit:0, izin:0, alfa:0, total:0 
+      };
+    }
+
+    const s = bySubject[a.subject][a.nim];
+    s.total++;
+    if (a.status==="Hadir") s.hadir++;
+    if (a.status==="Sakit") s.sakit++;
+    if (a.status==="Izin") s.izin++;
+    if (a.status==="Alfa") s.alfa++;
+  });
+
+  // === Render Tables Per Subject ===
+  let html = "";
+
+  Object.keys(bySubject).forEach(subject=>{
+    html += `
+      <h5 class="mt-3 text-primary fw-bold">${subject}</h5>
+      <div class="table-container mb-3">
+        <table class="table table-bordered table-sm align-middle">
+          <thead class="table-success">
+            <tr>
+              <th>Nama</th>
+              <th>NIM</th>
+              <th>Hadir</th>
+              <th>Sakit</th>
+              <th>Izin</th>
+              <th>Alfa</th>
+              <th>Total</th>
+              <th>% Hadir</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    let rows = Object.keys(bySubject[subject]).map(nim=>{
+      const d = bySubject[subject][nim];
+      const percent = d.total ? Math.round((d.hadir / d.total) * 100) : 0;
+      return { ...d, nim, percent };
+    });
+
+    rows.sort((a,b)=> sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+
+    rows.forEach(r=>{
+      html += `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.nim}</td>
+          <td>${r.hadir}</td>
+          <td>${r.sakit}</td>
+          <td>${r.izin}</td>
+          <td>${r.alfa}</td>
+          <td>${r.total}</td>
+          <td>${r.percent}%</td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  $("statMatkul").innerHTML = html;
+}
+
+/* refresh */
+$("btnRefresh").addEventListener("click", function(){ renderAdminViews(); renderStats(); alert("Data direfresh."); });
+
+/* realtime clock */
+setInterval(()=>{ $("clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
